@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import os.path
-print("{:-^100}".format(' CHECK FILE '))
+print("{:-^100}".format(' KIỂM TRA FILE '))
 name_file = str(input("Vui lòng nhập mã lớp học: ")) + ".txt"
 
 #Tạo function kiểm tra sự tồn tại của file
@@ -94,7 +94,7 @@ def thong_ke():
     print("Điểm cao nhất: {}".format(highest_scores))
     print("Điểm thấp nhất: {}".format(lowest_scores))
     print("Miền giá trị của điểm: {}".format(highest_scores - lowest_scores))
-    print("Giá trị trung vị {}".format(median_scores))
+    print("Giá trị trung vị: {}".format(median_scores))
     print("\t Câu bị bỏ qua: {}".format(Ans_none))
     print("\t Số học viên bỏ qua: {}".format(df_max_none.iloc[0,1]))
     print("\t Tỷ lệ bị bỏ qua: {}".format(rate_none))
