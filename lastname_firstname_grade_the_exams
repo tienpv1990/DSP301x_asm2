@@ -4,7 +4,6 @@ import os.path
 print("{:-^100}".format(' KIỂM TRA FILE '))
 name_file = str(input("Vui lòng nhập mã lớp học: ")) + ".txt"
 
-#Tạo function kiểm tra sự tồn tại của file
 try:
     read_file = pd.read_csv(name_file, header = None, sep=" ")
     print("Mở mã lớp thành công")
