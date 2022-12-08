@@ -9,8 +9,6 @@ try:
     print("Mở mã lớp thành công")
 except FileNotFoundError:
     print("Mã lớp không tồn tại")
-    print("Vui lòng chọn 5 để thoát chương trình và nhập lại mã lớp")
-        
 
 #Xây dựng df chứa thông tin ID và tính không hợp lệ của dòng chứa ID đó
 np_raw = read_file.values
