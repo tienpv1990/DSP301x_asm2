@@ -1,0 +1,131 @@
+import numpy as np
+import pandas as pd
+import os.path
+print("{:-^100}".format(' CHECK FILE '))
+name_file = str(input("Vui lòng nhập mã lớp học: ")) + ".txt"
+
+#Tạo function kiểm tra sự tồn tại của file
+def check_file():
+    try:
+        read_file = pd.read_csv(name_file, header = None, sep=" ")
+        print("Mở mã lớp thành công")
+    except FileNotFoundError:
+        print("Mã lớp không tồn tại")
+        print("Vui lòng chọn 5 để thoát chương trình và nhập lại mã lớp")
+        
+
+#Xây dựng df chứa thông tin ID và tính không hợp lệ của dòng chứa ID đó
+np_raw = read_file.values
+lst_raw = []
+for i in np_raw:
+    j = str(i).replace("['","").replace("']","")
+    k = list(j.split(","))
+    lst_raw.append(k)
+df_raw = pd.DataFrame(lst_raw)
+df_analyz = pd.concat([df_raw.iloc[:,0], df_raw.count(axis = 1), df_raw.iloc[:,0].str[0], df_raw.iloc[:,0].str[1:], df_raw.iloc[:,0].str.len()] , axis = 1)
+df_analyz.loc[:,5] = 0
+df_line_invalid = df_analyz[df_analyz.iloc[:,1] != 26]
+df_line_invalid.loc[:, 5] = "Line invalid"
+df_ID_invalid_1 = df_analyz[df_analyz.iloc[:,2] != "N"]
+df_ID_invalid_1.loc[:, 5] = "ID invalid"
+df_ID_invalid_2 = df_analyz[df_analyz.iloc[:,4] != 9]
+df_ID_invalid_2.loc[:, 5] = "ID invalid"
+df_ID_invalid_3 = pd.DataFrame([], columns = df_analyz.columns)
+for i in df_analyz.iloc[:,3]:
+    try:
+        check = int(i) + 1
+    except:
+        df_ID_invalid_3 = df_analyz[df_analyz.iloc[:,3] == i]
+df_ID_invalid_3.loc[:, 5] = "ID invalid"
+df_invalid = pd.concat([df_ID_invalid_1.iloc[:,[0, 5]], df_ID_invalid_2.iloc[:,[0, 5]], df_ID_invalid_3.iloc[:,[0, 5]], df_line_invalid.iloc[:,[0, 5]]], axis = 0)
+
+#Xây dựng df chứa thông tin điểm lớp học
+df_valid = df_raw.drop(df_invalid.index.tolist()).iloc[:,:26]
+answer_key = "B,A,D,D,C,B,D,A,C,C,D,B,A,B,A,C,B,D,A,C,A,A,B,D,D"
+answer = tuple(answer_key.split(","))
+
+df_ans = pd.DataFrame([answer],
+                                    index = df_valid.index,
+                                    columns = range(1,26))
+df_score_1 = df_valid[df_valid.iloc[:,1:] != df_ans].iloc[:,1:].fillna(value = 4)
+df_score_2 = df_score_1[df_score_1 != ""].fillna(value = 0)
+df_score = df_score_2.replace(regex = ["A","B", "C", "D"], value = -1)
+
+#Xây dựng df chứa tổng điểm từng học viên
+df_sum = pd.concat([df_valid.iloc[:,0] ,df_score.sum(axis = 1)], axis = 1)
+
+#Xây dựng df thống kê chất lượng trả lời của học viên theo các câu hỏi:
+df_ans_count = pd.DataFrame({"Ans" : list(range(1,26))},
+                                               index = list(range(1,26)))
+df_ans_count["None"] = df_score[df_score== 0].count(axis = 0)
+df_ans_count["False"] = df_score[df_score== -1].count(axis = 0)
+df_ans_count["True"] = df_score[df_score== 4].count(axis = 0)
+
+#Xác định câu bị bỏ qua nhiều nhất và câu trả lời sai nhiều nhất cùng tỷ lệ bị bỏ qua
+df_max_none = df_ans_count[df_ans_count["None"] == df_ans_count["None"].max()].iloc[:, [0,1]]
+df_max_none["rate"] = round((df_max_none["None"]/df_valid.shape[0]),3)
+df_max_false = df_ans_count[df_ans_count["False"] == df_ans_count["False"].max()].iloc[:, [0,2]]
+df_max_false["rate"] = round((df_max_false["False"]/df_valid.shape[0]),3)
+str_none = str(df_max_none.values.tolist()).replace("[[","").replace("]]","").replace(","," -").replace("] - [",", ")
+str_false = str(df_max_false.values.tolist()).replace("[[","").replace("]]","").replace(","," -").replace("] - [",", ")
+
+# Tạo các biến chứa thông tin thống kê điểm:
+count_high_scores = int(df_sum[ df_sum.iloc[:,1] > 80].iloc[:,1].count())
+highest_scores = int(df_sum.iloc[:,1].max())
+lowest_scores = int(df_sum.iloc[:,1].min())
+mean_scores = int(df_sum.iloc[:,1].mean())
+median_scores = int(df_sum.iloc[:,1].median())
+
+#Phân tích file dữ liệu
+def phan_tich():
+    print("{:-^100}".format(' PHÂN TÍCH '))
+    for i in df_invalid.index:
+        a= str(df_raw.loc[i][df_raw.loc[i].notnull()].tolist()).replace('[','').replace(']','').replace("'","")
+        if df_invalid.loc[i][5] == "ID invalid":
+            print("Dòng dữ liệu không hợp lệ: ID học viên không hợp lệ " + "\n" + a)
+        elif df_invalid.loc[i][5] == "Line invalid":
+            print("Dòng dữ liệu không hợp lệ: không chứa đúng 26 giá trị: " + "\n" + a)
+    print("Tổng số dòng dữ liệu hợp lệ: {}".format(df_raw.shape[0] - df_invalid.shape[0]))
+    print("Tổng số dòng dữ liệu không hợp lệ: " + str(df_invalid.shape[0]))
+
+def thong_ke():
+    print("{:-^100}".format(' THỐNG KÊ '))
+    print("Tổng số học viên đạt điểm cảo (hơn 80 điểm): {}".format(count_high_scores))
+    print("Điểm trung bình: {}".format(mean_scores))
+    print("Điểm cao nhất: {}".format(highest_scores))
+    print("Điểm thấp nhất: {}".format(lowest_scores))
+    print("Miền giá trị của điểm: {}".format(highest_scores - lowest_scores))
+    print("Giá trị trung vị {}".format(median_scores))
+    print("Thống kê câu bị bỏ qua nhiều nhất: (Câu bị bỏ qua - Số học viên bỏ qua - Tỷ lệ bị bỏ qua): {}".format(str_none))
+    print("Thống kê câu bị sai nhiều nhất: (Câu bị sai - Số học viên trả lời sai - Tỷ lệ bị sai): {}".format(str_false))
+def export_file():
+    save_file = "./Output/" + "Done_" + name_file
+    df_sum.to_csv(save_file, index = False, header = False)
+
+def main():
+    while True:
+        print("""
+        1. Kiểm tra file.
+        2. Phân tích file lớp học.
+        3. Thống kê điểm lớp học.
+        4. Ghi kết quả tổng điểm ra file mới.
+        5. Thoát.
+        """)
+        select = input("Mời bạn chọn chức năng mong muốn: ")
+        if str(select).isdigit():
+            select = int(select)
+            if select ==1:
+                check_file()
+            elif select == 2:
+                phan_tich()
+            elif select == 3:
+                thong_ke()  
+            elif select == 4:
+                export_file()
+                print("Ghi file thành công")
+            elif select == 5:
+                print("Thoát chương trình thành công")
+                break
+            else:
+                print("Không có chức năng này, vui lòng chọn chức năng hiển thị phía trên")
+main()
