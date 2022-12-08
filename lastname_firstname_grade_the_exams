@@ -5,13 +5,12 @@ print("{:-^100}".format(' CHECK FILE '))
 name_file = str(input("Vui lòng nhập mã lớp học: ")) + ".txt"
 
 #Tạo function kiểm tra sự tồn tại của file
-def check_file():
-    try:
-        read_file = pd.read_csv(name_file, header = None, sep=" ")
-        print("Mở mã lớp thành công")
-    except FileNotFoundError:
-        print("Mã lớp không tồn tại")
-        print("Vui lòng chọn 5 để thoát chương trình và nhập lại mã lớp")
+try:
+    read_file = pd.read_csv(name_file, header = None, sep=" ")
+    print("Mở mã lớp thành công")
+except FileNotFoundError:
+    print("Mã lớp không tồn tại")
+    print("Vui lòng chọn 5 để thoát chương trình và nhập lại mã lớp")
         
 
 #Xây dựng df chứa thông tin ID và tính không hợp lệ của dòng chứa ID đó
@@ -63,11 +62,11 @@ df_ans_count["True"] = df_score[df_score== 4].count(axis = 0)
 
 #Xác định câu bị bỏ qua nhiều nhất và câu trả lời sai nhiều nhất cùng tỷ lệ bị bỏ qua
 df_max_none = df_ans_count[df_ans_count["None"] == df_ans_count["None"].max()].iloc[:, [0,1]]
-df_max_none["rate"] = round((df_max_none["None"]/df_valid.shape[0]),3)
+rate_none = round(df_max_none.iloc[0,1]/df_valid.shape[0],3)
+Ans_none = str(df_max_none["Ans"].values.tolist()).replace("[","").replace("]","")
 df_max_false = df_ans_count[df_ans_count["False"] == df_ans_count["False"].max()].iloc[:, [0,2]]
-df_max_false["rate"] = round((df_max_false["False"]/df_valid.shape[0]),3)
-str_none = str(df_max_none.values.tolist()).replace("[[","").replace("]]","").replace(","," -").replace("] - [",", ")
-str_false = str(df_max_false.values.tolist()).replace("[[","").replace("]]","").replace(","," -").replace("] - [",", ")
+rate_false = round(df_max_false.iloc[0,1]/df_valid.shape[0],3)
+Ans_false = str(df_max_false["Ans"].values.tolist()).replace("[","").replace("]","")
 
 # Tạo các biến chứa thông tin thống kê điểm:
 count_high_scores = int(df_sum[ df_sum.iloc[:,1] > 80].iloc[:,1].count())
@@ -82,9 +81,9 @@ def phan_tich():
     for i in df_invalid.index:
         a= str(df_raw.loc[i][df_raw.loc[i].notnull()].tolist()).replace('[','').replace(']','').replace("'","")
         if df_invalid.loc[i][5] == "ID invalid":
-            print("Dòng dữ liệu không hợp lệ: ID học viên không hợp lệ " + "\n" + a)
+            print("Dòng dữ liệu không hợp lệ: ID học viên không hợp lệ \n" + a)
         elif df_invalid.loc[i][5] == "Line invalid":
-            print("Dòng dữ liệu không hợp lệ: không chứa đúng 26 giá trị: " + "\n" + a)
+            print("Dòng dữ liệu không hợp lệ: không chứa đúng 26 giá trị: \n" + a)
     print("Tổng số dòng dữ liệu hợp lệ: {}".format(df_raw.shape[0] - df_invalid.shape[0]))
     print("Tổng số dòng dữ liệu không hợp lệ: " + str(df_invalid.shape[0]))
 
@@ -96,8 +95,13 @@ def thong_ke():
     print("Điểm thấp nhất: {}".format(lowest_scores))
     print("Miền giá trị của điểm: {}".format(highest_scores - lowest_scores))
     print("Giá trị trung vị {}".format(median_scores))
-    print("Thống kê câu bị bỏ qua nhiều nhất: (Câu bị bỏ qua - Số học viên bỏ qua - Tỷ lệ bị bỏ qua): {}".format(str_none))
-    print("Thống kê câu bị sai nhiều nhất: (Câu bị sai - Số học viên trả lời sai - Tỷ lệ bị sai): {}".format(str_false))
+    print("\t Câu bị bỏ qua: {}".format(Ans_none))
+    print("\t Số học viên bỏ qua: {}".format(df_max_none.iloc[0,1]))
+    print("\t Tỷ lệ bị bỏ qua: {}".format(rate_none))
+    print("Thống kê câu bị trả lời sai nhiều nhất:")
+    print("\t Câu bị trả lời sai: {}".format(Ans_false))
+    print("\t Số học viên trả lời sai: {}".format(df_max_false.iloc[0,1]))
+    print("\t Tỷ lệ bị trả lời sai: {}".format(rate_false))
 def export_file():
     save_file = "./Output/" + "Done_" + name_file
     df_sum.to_csv(save_file, index = False, header = False)
@@ -105,25 +109,22 @@ def export_file():
 def main():
     while True:
         print("""
-        1. Kiểm tra file.
-        2. Phân tích file lớp học.
-        3. Thống kê điểm lớp học.
-        4. Ghi kết quả tổng điểm ra file mới.
-        5. Thoát.
+        1. Phân tích file lớp học.
+        2. Thống kê điểm lớp học.
+        3. Ghi kết quả tổng điểm ra file mới.
+        4. Thoát.
         """)
         select = input("Mời bạn chọn chức năng mong muốn: ")
         if str(select).isdigit():
             select = int(select)
-            if select ==1:
-                check_file()
-            elif select == 2:
+            if select == 1:
                 phan_tich()
-            elif select == 3:
+            elif select == 2:
                 thong_ke()  
-            elif select == 4:
+            elif select == 3:
                 export_file()
                 print("Ghi file thành công")
-            elif select == 5:
+            elif select == 4:
                 print("Thoát chương trình thành công")
                 break
             else:
