@@ -35,6 +35,6 @@ Phần mềm cần cài đặt:
        * Câu bị trả lời sai:
        * Số học viên trả lời sai:
        * Tỷ lệ bị trả lời sai:
-  * Chọn `3. Ghi kết quả tổng điểm ra file mới.`, phần mềm sẽ ghi thông tin tổng điểm của từng học viên theo ID ra file mới tại thư mục `Output`
+  * Chọn `3. Ghi kết quả tổng điểm ra file mới.`, phần mềm sẽ ghi thông tin tổng điểm của từng học viên theo ID ra file mới tại thư mục `Output`, đồng thời hiện thông báo `Ghi file thành công`
   * Chọn `4. Thoát" để thoát chương trình.
   
